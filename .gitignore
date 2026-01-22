@@ -15,14 +15,20 @@ Cargo.lock
 
 # Misc secret files
 .env
+.env.local
 .*/
-Secrets.toml
-Secrets.dev.toml
+!.sqlx/
+ferris.secrets.toml
+ferris.toml
+database/
+*.sqlite3
+*.db
+logs/
+logs-bkp/
 
 # Allow the .github folder
 !.github/
 /target
-.shuttle*
-Secrets*.toml
 
-rustc-ice*
+# Log folder
+logs/

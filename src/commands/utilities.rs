@@ -1,14 +1,10 @@
-use std::sync::LazyLock;
 use std::iter;
-
-use anyhow::{anyhow, Error};
-use poise::serenity_prelude::{self as serenity, ChannelType, EditThread};
-use std::time::Duration;
+use std::sync::LazyLock;
 
 use anyhow::{Error, anyhow};
-use poise::serenity_prelude as serenity;
-use poise::serenity_prelude::Timestamp;
+use poise::serenity_prelude::{self as serenity, ChannelType, EditThread, Timestamp};
 use rand::Rng;
+use std::time::Duration;
 
 use crate::types::Context;
 
@@ -300,21 +296,17 @@ pub async fn solved(ctx: Context<'_>) -> Result<(), Error> {
 		return Err(anyhow!("thread is already solved"));
 	}
 
-	let tags_new = tags_old
-		.iter()
-		.cloned()
-		.chain(iter::once(solved_tag.id));
+	let tags_new = tags_old.iter().copied().chain(iter::once(solved_tag.id));
 
-	thread.edit_thread(
-		ctx,
-		EditThread::new().applied_tags(tags_new)
-	).await?;
-	
+	thread
+		.edit_thread(ctx, EditThread::new().applied_tags(tags_new))
+		.await?;
+
 	Ok(())
 }
 /// Edit a message by its ID
 ///
-/// /edit <message_id>
+/// /edit <`message_id`>
 ///
 /// Replaces the content of the specified message with your next message.
 /// Only moderators can use this command.

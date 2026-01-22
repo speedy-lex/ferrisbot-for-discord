@@ -3,12 +3,12 @@ use std::{
 	ops::Not as _,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use futures::StreamExt as _;
 use itertools::Itertools;
 use poise::{
-	modal::execute_modal_on_component_interaction, serenity_prelude::*, ChoiceParameter,
-	CreateReply, ReplyHandle,
+	ChoiceParameter, CreateReply, ReplyHandle, modal::execute_modal_on_component_interaction,
+	serenity_prelude::*,
 };
 
 use crate::types::Context;
@@ -292,7 +292,7 @@ impl MoveOptions {
 	required_bot_permissions = "MANAGE_MESSAGES | MANAGE_WEBHOOKS | MANAGE_THREADS | SEND_MESSAGES_IN_THREADS"
 )]
 pub async fn move_messages_context_menu(ctx: Context<'_>, msg: Message) -> Result<()> {
-	move_messages(ctx, msg).await
+	Box::pin(move_messages(ctx, msg)).await
 }
 
 struct CreatedMoveOptionsDialog<'a> {
@@ -589,20 +589,22 @@ impl MoveOptionsDialog {
 				.max_values(1)
 				.placeholder("Which channel should messages be moved to?"),
 			),
-			MoveOptionComponent::ExecuteButton => {
-				CreateActionRow::Buttons(vec![CreateButton::new(custom_id)
+			MoveOptionComponent::ExecuteButton => CreateActionRow::Buttons(vec![
+				CreateButton::new(custom_id)
 					.style(ButtonStyle::Danger)
-					.label("Move")])
-			}
+					.label("Move"),
+			]),
 			MoveOptionComponent::ChangeNameButton => {
 				let label = if self.destination == MoveDestinationOption::NewForumPost {
 					"Change forum post name"
 				} else {
 					"Change thread name"
 				};
-				CreateActionRow::Buttons(vec![CreateButton::new(custom_id)
-					.style(ButtonStyle::Secondary)
-					.label(label)])
+				CreateActionRow::Buttons(vec![
+					CreateButton::new(custom_id)
+						.style(ButtonStyle::Secondary)
+						.label(label),
+				])
 			}
 		}
 	}
@@ -744,13 +746,12 @@ async fn move_messages(ctx: Context<'_>, start_msg: Message) -> Result<()> {
 			delete_on_fail,
 			..
 		} = destination
+			&& delete_on_fail
 		{
-			if delete_on_fail {
-				match thread.delete(&ctx).await {
-					Ok(_) => return Err(anyhow!("failed to move messages")),
-					Err(e) => {
-						tracing::warn!(err = %e, "failed to delete thread, deleting messages");
-					}
+			match thread.delete(&ctx).await {
+				Ok(_) => return Err(anyhow!("failed to move messages")),
+				Err(e) => {
+					tracing::warn!(err = %e, "failed to delete thread, deleting messages");
 				}
 			}
 		}

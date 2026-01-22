@@ -3,7 +3,6 @@
 !Cargo.toml
 !Cargo.lock
 !/src
+!/assets
 !/migrations
 !sqlx-data.json
-!/assets
-!shuttle_prebuild.sh
